@@ -38,9 +38,11 @@ def get_ootd_weather():
     try:
         u = "https://open-meteo.com"
         j = requests.get(u, timeout=6).json()
-        cur_t = round(j.get("current", {}).get("temperature_2m", 21))
-        tmax = round(j.get("daily", {}).get("temperature_2m_max", [24])[0])
-        tmin = round(j.get("daily", {}).get("temperature_2m_min", [18])[0])
+        cur_t = round(float(j.get("current", {}).get("temperature_2m", 21)))
+        tmax_arr = j.get("daily", {}).get("temperature_2m_max") or [24]
+        tmin_arr = j.get("daily", {}).get("temperature_2m_min") or [18]
+        tmax = round(float(tmax_arr[0]))
+        tmin = round(float(tmin_arr[0]))
         if cur_t <= 17:
             look = "軟糯毛絨外套 ＋ 內搭發熱衣 ＋ 高腰顯瘦長褲"
         elif cur_t <= 23:
@@ -66,7 +68,7 @@ def get_user_name(uid: str):
 
 @app.get("/")
 def root():
-    return {"status": "Online", "service": "Taiwan OOTD & Cute Boutique Pro App 3.5"}
+    return {"status": "Online", "service": "Taiwan OOTD & Cute Boutique Pro App 3.6"}
 
 @app.post("/api/shop_add")
 async def web_shop_add(
@@ -99,47 +101,6 @@ async def web_wish_add(item_name: str = Form(...), price_tag: str = Form("$399")
     wid = f"W{int(datetime.datetime.utcnow().timestamp() * 1000)}"
     call_sheet({"action": "add_wish", "wish_id": wid, "user_id": "web_girl", "user_name": "櫥窗買家", "item_name": item_name, "price_tag": price_tag, "note": "App心動收藏"})
     return {"status": "ok"}
-@app.get("/ootd_app", response_class=HTMLResponse)
-def ootd_cute_boutique_app(msg: str = ""):
-    S = chr(47)
-    items_json = json.dumps(CUTE_SHOP_ITEMS, ensure_ascii=False)
-    w_info = get_ootd_weather()
-    app_url_enc = urllib.parse.quote(f"{RENDER_BASE_URL}/ootd_app")
-    toast_html = '<div class="toast">✨ 店長新品與美照已成功上架至精品選品櫥窗囉！</div>' if msg == "added" else ""
-
-    html = f"""<!DOCTYPE html><html><head><meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=1.0,user-scalable=no"/>
-    <title>👗 每日氣溫穿搭 ＆ 韓系可愛選品館</title>
-    <style>
-      * {{ box-sizing: border-box; -webkit-tap-highlight-color: transparent; }}
-      body {{ margin: 0; padding: 0 0 92px 0; font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", sans-serif; background: radial-gradient(circle at top right, #3D2430, #191216 58%); color: #FFF5F7; min-height: 100vh; }}
-      .topbar {{ background: rgba(29, 19, 24, 0.9); backdrop-filter: blur(16px); padding: 15px 18px; position: sticky; top: 0; z-index: 100; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid rgba(251, 113, 133, 0.25); }}
-      .topbar h1 {{ margin: 0; font-size: 16px; font-weight: 800; color: #FFE4E6; letter-spacing: 0.5px; }}
-      .badge-vip {{ font-size: 11px; background: linear-gradient(135deg, #FB7185, #E11D48); color: #fff; padding: 4px 10px; border-radius: 20px; font-weight: 800; }}
-      .wrap {{ max-width: 540px; margin: 0 auto; padding: 14px; }}
-      .toast {{ background: rgba(251, 113, 133, 0.22); border: 1px solid #FB7185; color: #FFE4E6; padding: 12px; border-radius: 14px; font-size: 13px; font-weight: 700; margin-bottom: 12px; text-align: center; }}
-      .ootd-hero {{ background: linear-gradient(135deg, rgba(251, 113, 133, 0.18), rgba(244, 114, 182, 0.12)); border: 1px solid rgba(251, 113, 133, 0.32); border-radius: 22px; padding: 16px; margin-bottom: 14px; }}
-      .chips {{ display: flex; gap: 8px; overflow-x: auto; padding-bottom: 12px; scrollbar-width: none; }}
-      .chip {{ white-space: nowrap; background: rgba(255,255,255,0.07); border: 1px solid rgba(255,228,230,0.16); color: #FECDD3; padding: 8px 14px; border-radius: 20px; font-size: 12px; font-weight: 700; cursor: pointer; }}
-      .chip.active {{ background: linear-gradient(135deg, #FB7185, #E11D48); border-color: #FDA4AF; color: #fff; box-shadow: 0 4px 14px rgba(225, 29, 72, 0.4); }}
-      .shop-card {{ background: rgba(36, 24, 30, 0.85); backdrop-filter: blur(16px); border: 1px solid rgba(255,228,230,0.14); border-radius: 22px; padding: 16px; margin-bottom: 14px; box-shadow: 0 10px 28px rgba(0,0,0,0.4); }}
-      .prod-img {{ width: 100%; height: 215px; object-fit: cover; border-radius: 16px; margin-bottom: 12px; border: 1px solid rgba(255,228,230,0.18); display: block; }}
-      .price-row {{ display: flex; align-items: baseline; gap: 8px; margin-top: 8px; }}
-      .price-now {{ font-size: 22px; font-weight: 900; color: #FB7185; }}
-      .price-orig {{ font-size: 13px; color: #9CA3AF; text-decoration: line-through; }}
-      .btn-row {{ display: flex; gap: 8px; margin-top: 12px; }}
-      .btn {{ flex: 1; text-align: center; text-decoration: none; padding: 11px 6px; border-radius: 14px; font-size: 13px; font-weight: 800; cursor: pointer; border: none; color: #fff; }}
-      .btn-rose {{ background: linear-gradient(135deg, #FB7185, #E11D48); box-shadow: 0 4px 12px rgba(225, 29, 72, 0.35); }}
-      .btn-glass {{ background: rgba(255,255,255,0.1); color: #FFE4E6; border: 1px solid rgba(255,228,230,0.2); }}
-      .field {{ width: 100%; background: rgba(20, 14, 17, 0.88); border: 1px solid rgba(255,228,230,0.22); color: #fff; padding: 12px; border-radius: 12px; font-size: 14px; margin-top: 8px; }}
-      .page {{ display: none; }}
-      .page.active {{ display: block; }}
-      .tabbar {{ position: fixed; bottom: 0; left: 0; right: 0; background: rgba(25, 16, 21, 0.96); backdrop-filter: blur(18px); border-top: 1px solid rgba(251, 113, 133, 0.22); display: flex; padding: 8px 8px 14px; z-index: 120; }}
-      .tab {{ flex: 1; text-align: center; color: #FDA4AF; font-size: 12px; font-weight: 800; cursor: pointer; padding-top: 4px; }}
-      .tab.active {{ color: #FFF1F2; }}
-      .tab-cta {{ background: linear-gradient(135deg, #FB7185, #E11D48); color: #fff; padding: 8px 12px; border-radius: 20px; font-size: 12px; }}
-    </style></head><body>
-    <div class="topbar"><h1>👗 韓系穿搭靈感 ＆ 可愛選品館</h1><span class="badge-vip">仙女 VIP 專享</span></div>
     <div id="page-shop" class="page active"><div class="wrap">
       {toast_html}
       <div class="ootd-hero">
@@ -309,69 +270,6 @@ def ootd_cute_boutique_app(msg: str = ""):
       renderShop();
     </script></body></html>"""
     return HTMLResponse(content=html)
-def make_ootd_shop_card():
-    S = chr(47)
-    app_uri = f"{RENDER_BASE_URL}/ootd_app?openExternalBrowser=1"
-    w_info = get_ootd_weather()
-    hot_item = CUTE_SHOP_ITEMS if len(CUTE_SHOP_ITEMS) > 0 else {"name": "韓系奶杏色針織外套", "price": "$399", "url": MAIN_SHOP_URL}
-
-    share_msg = f"👗【每日氣溫顯瘦穿搭 ＆ 韓系可愛選品館】\n今天氣溫 {w_info['temp']}°C，推薦穿搭：{w_info['look']}\n🧸 還有超多韓系顯瘦女裝與療癒可愛小物限時優惠中！\n📲 免費測顯白膚色與逛選品櫥窗：\nhttps:{S}{S}line.me{S}R{S}ti{S}p{S}{LINE_BOT_BASIC_ID}"
-    share_uri = f"https:{S}{S}line.me{S}R{S}share?text={urllib.parse.quote(share_msg)}"
-    threads_uri = f"https:{S}{S}www.threads.net{S}intent{S}post?text={urllib.parse.quote(share_msg + ' #每日穿搭 #韓系女裝 #可愛小物')}"
-
-    bubble_1 = BubbleContainer(
-        size="mega",
-        header=BoxComponent(layout="vertical", background_color="#1D1318", padding_all="16px", contents=[
-            TextComponent(text="👗 每日氣溫穿搭 ＆ 可愛選品館", weight="bold", size="md", color="#FFE4E6", wrap=True),
-            TextComponent(text="AI 顯白顯瘦公式 · 爆款女裝 · 療癒小物", size="xs", color="#FDA4AF", weight="bold", wrap=True, margin="xs")
-        ]),
-        body=BoxComponent(layout="vertical", spacing="sm", background_color="#FFF5F7", contents=[
-            BoxComponent(layout="horizontal", spacing="sm", contents=[
-                BoxComponent(layout="vertical", background_color="#3D2430", corner_radius="12px", padding_all="10px", align_items="center", contents=[
-                    TextComponent(text="🌡️ 今日氣溫", size="xxs", color="#FDA4AF", weight="bold"),
-                    TextComponent(text=f"{w_info['temp']}°C", size="sm", color="#FFFFFF", weight="bold", margin="xs")
-                ]),
-                BoxComponent(layout="vertical", background_color="#3D2430", corner_radius="12px", padding_all="10px", align_items="center", contents=[
-                    TextComponent(text="🔥 今日爆款", size="xxs", color="#FBBF24", weight="bold"),
-                    TextComponent(text=f"{hot_item['price']} 優惠", size="sm", color="#FFFFFF", weight="bold", margin="xs")
-                ])
-            ]),
-            BoxComponent(layout="vertical", background_color="#FFE4E6", corner_radius="14px", padding_all="12px", contents=[
-                TextComponent(text="✨ 今日顯瘦穿搭靈感：", size="xs", color="#BE123C", weight="bold"),
-                TextComponent(text=w_info["look"], size="xs", color="#1F2937", wrap=True, margin="xs")
-            ])
-        ]),
-        footer=BoxComponent(layout="vertical", spacing="sm", background_color="#FFF5F7", contents=[
-            ButtonComponent(style="primary", color="#E11D48", height="sm", action=URIAction(label="🛍️ 開啟韓系女裝選品櫥窗", uri=app_uri)),
-            BoxComponent(layout="horizontal", spacing="sm", contents=[
-                ButtonComponent(style="primary", color="#FB7185", height="sm", action=URIAction(label="🔥 搶爆款", uri=hot_item["url"])),
-                ButtonComponent(style="secondary", height="sm", action=MessageAction(label="🔮 測氣場", text="心理測驗"))
-            ]),
-            BoxComponent(layout="horizontal", spacing="sm", contents=[
-                ButtonComponent(style="secondary", height="sm", action=MessageAction(label="🧸 可愛物", text="可愛小物")),
-                ButtonComponent(style="primary", color="#D97706", height="sm", action=MessageAction(label="🎰 幸運色", text="抽幸運色"))
-            ])
-        ])
-    )
-
-    bubble_2 = BubbleContainer(
-        size="mega",
-        header=BoxComponent(layout="vertical", background_color="#1D1318", padding_all="16px", contents=[
-            TextComponent(text="💌 閨蜜湊免運 ＆ 官方賣場直達", weight="bold", size="md", color="#FFE4E6", wrap=True),
-            TextComponent(text="一鍵轉傳給姐妹挑穿搭、逛主賣場全館折扣", size="xs", color="#FDA4AF", weight="bold", wrap=True, margin="xs")
-        ]),
-        body=BoxComponent(layout="vertical", spacing="xs", background_color="#FFF5F7", contents=[
-            TextComponent(text="👈 向左滑動返回「今日氣溫穿搭與選品櫥窗」", size="xxs", color="#9F1239", weight="bold")
-        ]),
-        footer=BoxComponent(layout="vertical", spacing="sm", background_color="#FFF5F7", contents=[
-            ButtonComponent(style="primary", color="#E11D48", height="sm", action=URIAction(label="🏪 前往官方全館賣場", uri=MAIN_SHOP_URL)),
-            BoxComponent(layout="horizontal", spacing="sm", contents=[
-                ButtonComponent(style="primary", color="#10B981", height="sm", action=URIAction(label="💌 問閨蜜", uri=share_uri)),
-                ButtonComponent(style="primary", color="#1A1B1E", height="sm", action=URIAction(label="🧵 發脆文", uri=threads_uri))
-            ])
-        ])
-    )
-    return CarouselContainer(contents=[bubble_1, bubble_2])
 @app.post("/callback")
 async def callback(request: Request):
     sig = request.headers.get("X-Line-Signature", "")
@@ -418,12 +316,12 @@ def on_text(event):
             return
 
         if txt == "可愛小物":
-            cute_list = [x for x in CUTE_SHOP_ITEMS if "可愛" in x.get("cat", "")]
+            cute_list = [x for x in CUTE_SHOP_ITEMS if isinstance(x, dict) and "可愛" in x.get("cat", "")]
             if not cute_list:
-                cute_list = CUTE_SHOP_ITEMS[:3]
+                cute_list = [x for x in CUTE_SHOP_ITEMS if isinstance(x, dict)][:3]
             lines = ["🧸【本週閨蜜瘋搶・可愛療癒小物 TOP 精選】"]
             for it in cute_list[:3]:
-                lines.append(f"\n• {it['badge']} {it['name']}（優惠 {it['price']}）\n  ✨ {it['desc']}")
+                lines.append(f"\n• {it.get('badge','')} {it.get('name','')}（優惠 {it.get('price','')}）\n  ✨ {it.get('desc','')}")
             lines.append(f"\n🛍️ 立即前往官方賣場搶購免運優惠：\n{MAIN_SHOP_URL}")
             line_bot_api.reply_message(event.reply_token, TextSendMessage(text="\n".join(lines)))
             return
