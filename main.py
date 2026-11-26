@@ -13,7 +13,6 @@ app = FastAPI()
 LINE_CHANNEL_ACCESS_TOKEN = os.getenv("LINE_CHANNEL_ACCESS_TOKEN", "")
 LINE_CHANNEL_SECRET = os.getenv("LINE_CHANNEL_SECRET", "")
 
-
 # ⚠️ 1. 請填入「韓系穿搭與可愛選品導購變現資料庫」的 Google Apps Script /exec 網址
 GOOGLE_SHEET_API = "https://script.google.com/macros/s/AKfycbwYQCTZ_PrDnQztXoW11YxtMesSpe30d4c8h7d2P5vST3ZLCnHgzh04kV9UuLhvJyf4/exec"
 # ⚠️ 2. 請填入這個穿搭機器人的 LINE 官方帳號 ID（包含 @ 符號，例如 @123abcde）
@@ -39,10 +38,8 @@ def get_ootd_weather():
         u = "https://open-meteo.com"
         j = requests.get(u, timeout=6).json()
         cur_t = round(float(j.get("current", {}).get("temperature_2m", 21)))
-        tmax_arr = j.get("daily", {}).get("temperature_2m_max") or [24]
-        tmin_arr = j.get("daily", {}).get("temperature_2m_min") or [18]
-        tmax = round(float(tmax_arr[0]))
-        tmin = round(float(tmin_arr[0]))
+        tmax = round(float(next(iter(j.get("daily", {}).get("temperature_2m_max") or []), 24)))
+        tmin = round(float(next(iter(j.get("daily", {}).get("temperature_2m_min") or []), 18)))
         if cur_t <= 17:
             look = "軟糯毛絨外套 ＋ 內搭發熱衣 ＋ 高腰顯瘦長褲"
         elif cur_t <= 23:
@@ -68,7 +65,7 @@ def get_user_name(uid: str):
 
 @app.get("/")
 def root():
-    return {"status": "Online", "service": "Taiwan OOTD & Cute Boutique Pro App 3.6"}
+    return {"status": "Online", "service": "Taiwan OOTD & Cute Boutique Pro App 3.7"}
 
 @app.post("/api/shop_add")
 async def web_shop_add(
@@ -315,9 +312,9 @@ def make_ootd_shop_card():
     S = chr(47)
     app_uri = f"{RENDER_BASE_URL}/ootd_app?openExternalBrowser=1"
     w_info = get_ootd_weather()
-    first_item = CUTE_SHOP_ITEMS if isinstance(CUTE_SHOP_ITEMS, list) and len(CUTE_SHOP_ITEMS) > 0 else {}
-    hot_price = str(first_item.get("price", "$399"))
-    hot_url = str(first_item.get("url", MAIN_SHOP_URL))
+    first_item = next(iter(CUTE_SHOP_ITEMS), {})
+    hot_price = str(first_item.get("price", "$399")) if isinstance(first_item, dict) else "$399"
+    hot_url = str(first_item.get("url", MAIN_SHOP_URL)) if isinstance(first_item, dict) else MAIN_SHOP_URL
 
     share_msg = f"👗【每日氣溫顯瘦穿搭 ＆ 韓系可愛選品館】\n今天氣溫 {w_info['temp']}°C，推薦穿搭：{w_info['look']}\n🧸 還有超多韓系顯瘦女裝與療癒可愛小物限時優惠中！\n📲 免費測顯白膚色與逛選品櫥窗：\nhttps:{S}{S}line.me{S}R{S}ti{S}p{S}{LINE_BOT_BASIC_ID}"
     share_uri = f"https:{S}{S}line.me{S}R{S}share?text={urllib.parse.quote(share_msg)}"
