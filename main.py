@@ -30,6 +30,7 @@ CUTE_SHOP_ITEMS = [
     {"sku": "W02", "cat": "顯瘦神褲裙裝", "badge": "✨ 梨形身材救星", "name": "高腰垂墜感西裝闊腿長褲（附腰帶）", "price": "$450", "orig": "$780", "img": "https://unsplash.com", "desc": "視覺腿長瞬間 +10cm！完美修飾假胯寬，上班約會都能穿。", "url": MAIN_SHOP_URL},
     {"sku": "W03", "cat": "可愛療癒小物", "badge": "🧸 閨蜜湊單熱銷", "name": "日系毛絨小熊雲朵手提化妝包", "price": "$169", "orig": "$299", "img": "https://unsplash.com", "desc": "超軟萌泰迪絨毛手感，放補妝氣墊、護手霜與行動電源剛剛好！", "url": MAIN_SHOP_URL},
     {"sku": "W04", "cat": "可愛療癒小物", "badge": "💖 辦公室治癒系", "name": "奶油白胖胖貓爪保溫隨行咖啡杯 500ml", "price": "$289", "orig": "$490", "img": "https://unsplash.com", "desc": "316 不鏽鋼陶瓷內膽，買超商咖啡現折 5 元，放辦公桌超吸睛！", "url": MAIN_SHOP_URL},
+    {"sku": "B01", "cat": "整套優惠組", "badge": "👑 整套帶走省$350", "name": "【約會必勝三件套】奶杏針織外套＋高腰闊腿褲＋小熊化妝包", "price": "$899", "orig": "$1,249", "img": "https://unsplash.com", "desc": "整套幫你配到好！免煩惱上下身配色，整組帶走再享免運優惠！", "url": MAIN_SHOP_URL},
     {"sku": "W05", "cat": "韓系顯瘦上衣", "badge": "🌸 約會純欲風", "name": "法式方領鎖骨顯瘦坑條針織上衣", "price": "$299", "orig": "$520", "img": "https://unsplash.com", "desc": "露出最纖細的鎖骨線條，單穿或當大衣內搭都超級顯白！", "url": MAIN_SHOP_URL},
     {"sku": "W06", "cat": "可愛配飾包包", "badge": "🎀 韓妞氛圍感", "name": "復古燈芯絨百搭貝雷帽＋珍珠髮夾組", "price": "$199", "orig": "$350", "img": "https://unsplash.com", "desc": "沒洗頭也能 3 秒時髦出門，圓臉戴起來秒變精緻小V臉！", "url": MAIN_SHOP_URL}
 ]
@@ -65,7 +66,7 @@ def get_user_name(uid: str):
 
 @app.get("/")
 def root():
-    return {"status": "Online", "service": "Taiwan OOTD & Cute Boutique Pro App 3.7"}
+    return {"status": "Online", "service": "Taiwan OOTD & Cute Boutique Pro App 6.0"}
 
 @app.post("/api/shop_add")
 async def web_shop_add(
@@ -141,12 +142,20 @@ def ootd_cute_boutique_app(msg: str = ""):
     <div class="topbar"><h1>👗 韓系穿搭靈感 ＆ 可愛選品館</h1><span class="badge-vip">仙女 VIP 專享</span></div>
     <div id="page-shop" class="page active"><div class="wrap">
       {toast_html}
+      <div id="live-ticker" style="background:rgba(251,113,133,0.14);border:1px solid rgba(251,113,133,0.3);color:#FFE4E6;padding:8px 12px;border-radius:12px;font-size:11px;font-weight:700;margin-bottom:10px;text-align:center;">
+        🔥 新北 陳小姐 2 分鐘前剛帶走【軟糯奶杏色針織外套】！
+      </div>
+      <div onclick="copyCoupon(this)" style="background:linear-gradient(90deg,#BE123C,#E11D48);color:#FFF1F2;padding:10px 14px;border-radius:14px;font-size:12px;font-weight:800;margin-bottom:12px;display:flex;justify-content:space-between;align-items:center;cursor:pointer;">
+        <span>🎟️ 仙女專屬折價碼：<b>FAIRY88</b>（滿額現折＋免運）</span>
+        <span style="background:#FFF1F2;color:#BE123C;padding:3px 9px;border-radius:10px;font-size:11px;">點我複製</span>
+      </div>
       <div class="ootd-hero">
         <div style="display:flex;justify-content:space-between;align-items:center;">
           <span style="font-size:12px;color:#FDA4AF;font-weight:800;">🌡️ 今日即時氣溫 {w_info['temp']}°C（{w_info['range']}）</span>
           <button type="button" id="sign-btn" onclick="dailySign()" style="background:rgba(251,113,133,0.25);border:1px solid #FB7185;color:#FFE4E6;padding:4px 10px;border-radius:14px;font-size:11px;font-weight:800;cursor:pointer;">💖 每日簽到 +10愛心</button>
         </div>
         <div style="font-size:16px;font-weight:900;color:#FFF1F2;margin-top:6px;">👗 今日顯瘦穿搭：{w_info['look']}</div>
+        <div style="font-size:12px;color:#FBBF24;font-weight:800;margin-top:6px;">⏳ 仙女限時免運倒數：<span id="countdown">03:59:59</span></div>
         <div class="btn-row" style="margin-top:10px;">
           <button type="button" class="btn btn-rose" onclick="drawLuckyBox()">🎰 抽今日幸運色＆盲盒優惠</button>
         </div>
@@ -155,6 +164,7 @@ def ootd_cute_boutique_app(msg: str = ""):
 
       <div class="chips">
         <div class="chip active" onclick="filterCat('all', this)">✨ 全部爆款選品</div>
+        <div class="chip" onclick="filterCat('整套優惠組', this)">🎁 整套帶走省更多</div>
         <div class="chip" onclick="filterCat('韓系顯瘦上衣', this)">👚 韓系顯瘦上衣</div>
         <div class="chip" onclick="filterCat('顯瘦神褲裙裝', this)">👖 顯瘦神褲裙裝</div>
         <div class="chip" onclick="filterCat('可愛療癒小物', this)">🧸 可愛療癒小物</div>
@@ -165,49 +175,73 @@ def ootd_cute_boutique_app(msg: str = ""):
 
     <div id="page-tone" class="page"><div class="wrap">
       <div class="shop-card">
-        <div style="font-size:17px;font-weight:900;color:#FDA4AF;margin-bottom:4px;">🔮 今日仙女氣場心理測驗</div>
-        <div style="font-size:12px;color:#FECDD3;">憑直覺選一個你現在最想喝的飲品，測出今日命定穿搭：</div>
-        <div class="chips" style="margin-top:10px;padding-bottom:4px;">
-          <div class="chip" onclick="quizResult('milk')">🧋 黑糖珍珠鮮奶</div>
-          <div class="chip" onclick="quizResult('latte')">☕ 冰燕麥拿鐵</div>
-          <div class="chip" onclick="quizResult('peach')">🍑 白桃烏龍氣泡飲</div>
-          <div class="chip" onclick="quizResult('matcha')">🍵 宇治抹茶歐蕾</div>
+        <div style="font-size:16px;font-weight:900;color:#FDA4AF;margin-bottom:6px;">🎨 互動式上下身配色試衣間</div>
+        <div style="display:flex;gap:10px;align-items:center;">
+          <div style="flex:1;text-align:center;">
+            <div id="top-swatch" style="height:50px;border-radius:12px;background:#FDE68A;border:2px solid #fff;display:flex;align-items:center;justify-content:center;color:#1F2937;font-weight:900;font-size:12px;">👚 奶杏白上衣</div>
+            <div style="display:flex;gap:6px;justify-content:center;margin-top:6px;">
+              <button type="button" onclick="setOutfit('top','#FDE68A','奶杏白上衣')" style="width:22px;height:22px;border-radius:50%;background:#FDE68A;border:1px solid #fff;cursor:pointer;"></button>
+              <button type="button" onclick="setOutfit('top','#FDA4AF','蜜桃粉上衣')" style="width:22px;height:22px;border-radius:50%;background:#FDA4AF;border:1px solid #fff;cursor:pointer;"></button>
+              <button type="button" onclick="setOutfit('top','#93C5FD','霧霾藍上衣')" style="width:22px;height:22px;border-radius:50%;background:#93C5FD;border:1px solid #fff;cursor:pointer;"></button>
+            </div>
+          </div>
+          <div style="font-size:16px;font-weight:900;color:#FDA4AF;">➕</div>
+          <div style="flex:1;text-align:center;">
+            <div id="bot-swatch" style="height:50px;border-radius:12px;background:#334155;border:2px solid #fff;display:flex;align-items:center;justify-content:center;color:#F8FAFC;font-weight:900;font-size:12px;">👖 深灰西裝褲</div>
+            <div style="display:flex;gap:6px;justify-content:center;margin-top:6px;">
+              <button type="button" onclick="setOutfit('bot','#334155','深灰西裝褲')" style="width:22px;height:22px;border-radius:50%;background:#334155;border:1px solid #fff;cursor:pointer;"></button>
+              <button type="button" onclick="setOutfit('bot','#F5F5F4','燕麥白長裙')" style="width:22px;height:22px;border-radius:50%;background:#F5F5F4;border:1px solid #fff;cursor:pointer;"></button>
+              <button type="button" onclick="setOutfit('bot','#60A5FA','復古牛仔褲')" style="width:22px;height:22px;border-radius:50%;background:#60A5FA;border:1px solid #fff;cursor:pointer;"></button>
+            </div>
+          </div>
         </div>
-        <div id="quiz-res" style="background:rgba(20,14,17,0.82);padding:14px;border-radius:14px;margin-top:10px;font-size:13px;line-height:1.7;color:#FFF1F2;border-left:3px solid #F59E0B;">
-          👆 點選上方飲品，立即揭曉你的今日仙女氣場與幸運單品！
+        <div id="outfit-comment" style="background:rgba(20,14,17,0.82);padding:8px;border-radius:10px;margin-top:8px;font-size:12px;color:#FFE4E6;text-align:center;">✨ 韓系溫柔千金配色！上淺下深視覺顯瘦 -3kg！</div>
+      </div>
+      <div class="shop-card">
+        <div style="font-size:16px;font-weight:900;color:#FDA4AF;margin-bottom:4px;">📏 AI 網購衣服尺碼 ＆ 免運湊單精算</div>
+        <div style="display:flex;gap:8px;margin-top:8px;">
+          <input id="h-in" type="number" class="field" placeholder="身高 cm (160)" style="margin-top:0;"/>
+          <input id="w-in" type="number" class="field" placeholder="體重 kg (52)" style="margin-top:0;"/>
+          <button type="button" class="btn btn-rose" style="max-width:90px;" onclick="calcSize()">算尺碼</button>
         </div>
+        <div id="size-res" style="display:none;background:rgba(20,14,17,0.82);padding:10px;border-radius:10px;margin-top:8px;font-size:12px;color:#FFE4E6;border-left:3px solid #10B981;"></div>
+        <div style="display:flex;gap:8px;margin-top:10px;">
+          <input id="cart-in" type="number" class="field" placeholder="目前金額 (滿$599免運)" style="margin-top:0;"/>
+          <button type="button" class="btn btn-glass" style="max-width:90px;" onclick="calcFreeShip()">算湊單</button>
+        </div>
+        <div id="ship-res" style="display:none;background:rgba(20,14,17,0.82);padding:10px;border-radius:10px;margin-top:8px;font-size:12px;color:#FFE4E6;border-left:3px solid #F59E0B;"></div>
       </div>
 
       <div class="shop-card">
-        <div style="font-size:17px;font-weight:900;color:#FDA4AF;margin-bottom:4px;">🎨 AI 膚色顯白 ＆ 身形修飾診斷</div>
+        <div style="font-size:16px;font-weight:900;color:#FDA4AF;margin-bottom:4px;">🎁 交換禮物預算 ＆ 🔮 仙女心理測驗</div>
         <div class="chips" style="margin-top:8px;padding-bottom:4px;">
-          <div class="chip" onclick="showTone('warm')">🍑 暖黃皮</div>
-          <div class="chip" onclick="showTone('cool')">❄️ 冷白皮</div>
-          <div class="chip" onclick="showTone('pear')">🍐 梨形身材</div>
-          <div class="chip" onclick="showTone('petite')">🌸 小個子增高</div>
+          <div class="chip" onclick="pickGift(300)">🧸 $300內禮物</div>
+          <div class="chip" onclick="pickGift(500)">💖 $500內禮物</div>
+          <div class="chip" onclick="pickGift(1000)">👑 $1000整套禮</div>
+          <div class="chip" onclick="quizResult('milk')">🧋 測今日氣場</div>
         </div>
-        <div id="tone-res" style="background:rgba(20,14,17,0.8);padding:14px;border-radius:14px;margin-top:8px;font-size:13px;line-height:1.7;color:#FFF1F2;border-left:3px solid #FB7185;">
-          👆 點擊上方按鈕，解鎖專屬顯白顯瘦穿搭公式！
+        <div id="gift-res" style="background:rgba(20,14,17,0.82);padding:12px;border-radius:10px;margin-top:8px;font-size:13px;line-height:1.6;color:#FFF1F2;border-left:3px solid #FB7185;">
+          👆 點選上方按鈕，立即推薦交換禮物與你的今日命定穿搭！
         </div>
       </div>
     </div></div>
 
     <div id="page-admin" class="page"><div class="wrap">
       <div class="shop-card">
-        <div style="font-size:17px;font-weight:900;color:#FDA4AF;margin-bottom:4px;">🛍️ 店長快速上架爆款女裝／可愛小物</div>
-        <div style="font-size:12px;color:#FECDD3;">免改程式碼，貼上商品圖片網址與蝦皮／賣場分潤連結即可立即上架：</div>
+        <div style="font-size:16px;font-weight:900;color:#FDA4AF;margin-bottom:4px;">🛍️ 店長快速上架爆款女裝／可愛小物</div>
         <form action="{S}api{S}shop_add" method="post">
           <select name="cat" class="field">
             <option value="韓系顯瘦上衣">👚 韓系顯瘦上衣</option>
             <option value="顯瘦神褲裙裝">👖 顯瘦神褲裙裝</option>
             <option value="可愛療癒小物">🧸 可愛療癒小物</option>
             <option value="可愛配飾包包">🎀 可愛配飾包包</option>
+            <option value="整套優惠組">🎁 整套優惠組</option>
           </select>
-          <input name="badge" class="field" placeholder="🏷️ 吸睛標籤（如：🔥 限時免運 #1）" value="🔥 店長強推爆款"/>
-          <input name="name" class="field" placeholder="👗 商品名稱（如：韓系奶杏色針織外套）" required/>
+          <input name="badge" class="field" placeholder="🏷️ 吸睛標籤" value="🔥 店長強推爆款"/>
+          <input name="name" class="field" placeholder="👗 商品名稱" required/>
           <input name="price" class="field" placeholder="💰 優惠價（如：$399）" value="$399" required/>
           <input name="orig" class="field" placeholder="💸 原價劃線價（如：$690）" value="$690"/>
-          <input name="img" class="field" placeholder="🖼️ 商品實品圖片網址（選填，可貼蝦皮商品圖片網址）"/>
+          <input name="img" class="field" placeholder="🖼️ 商品實品圖片網址（選填）"/>
           <textarea name="desc" class="field" rows="2" placeholder="✨ 推坑賣點描述" required></textarea>
           <input name="url" class="field" placeholder="🔗 貼上您的蝦皮／MOMO／賣場分潤購買網址" required/>
           <button type="submit" class="btn btn-rose" style="width:100%;margin-top:12px;padding:14px;">🚀 立即上架至選品櫥窗</button>
@@ -217,33 +251,92 @@ def ootd_cute_boutique_app(msg: str = ""):
 
     <div class="tabbar">
       <div class="tab active" onclick="switchTab('shop', this)">🛍️ 精品選品櫥窗</div>
-      <div class="tab" onclick="switchTab('tone', this)">🔮 心理測驗診斷</div>
+      <div class="tab" onclick="switchTab('tone', this)">🎨 試衣間與工具</div>
       <div class="tab" onclick="switchTab('admin', this)"><span class="tab-cta">➕ 店長上架</span></div>
     </div>
-
     <script>
       const ITEMS = {items_json};
       const NL = String.fromCharCode(10);
       let curCat = 'all';
 
+      const TICKERS = [
+        '🔥 新北 陳小姐 2 分鐘前剛帶走【軟糯奶杏色針織外套】！',
+        '🧸 台北 林小姐 剛剛搶購了【日系毛絨小熊雲朵化妝包】！',
+        '💖 台中 張小姐 剛下單【約會必勝顯瘦三件套優惠組】！',
+        '☕ 高雄 黃小姐 剛剛收藏了【奶油白胖胖貓爪保溫杯】！'
+      ];
+      let tkIdx = 0;
+      setInterval(() => {{
+        tkIdx = (tkIdx + 1) % TICKERS.length;
+        const el = document.getElementById('live-ticker');
+        if (el) el.innerText = TICKERS[tkIdx];
+      }}, 3500);
+
+      setInterval(() => {{
+        const now = new Date();
+        const end = new Date(); end.setHours(23, 59, 59, 999);
+        const diff = Math.max(0, Math.floor((end - now) / 1000));
+        const h = String(Math.floor(diff / 3600)).padStart(2, '0');
+        const m = String(Math.floor((diff % 3600) / 60)).padStart(2, '0');
+        const s = String(diff % 60).padStart(2, '0');
+        const el = document.getElementById('countdown');
+        if (el) el.innerText = h + ':' + m + ':' + s;
+      }}, 1000);
+
+      function copyCoupon(el) {{
+        if (navigator.clipboard) navigator.clipboard.writeText('FAIRY88');
+        el.innerHTML = '<span>✅ 已成功複製折扣碼：<b>FAIRY88</b>（結帳直接貼上！）</span><span style="background:#10B981;color:#fff;padding:3px 9px;border-radius:10px;font-size:11px;">已複製</span>';
+      }}
+
       function dailySign() {{
         let pts = Number(localStorage.getItem('fairy_pts') || 0) + 10;
         localStorage.setItem('fairy_pts', pts);
-        const btn = document.getElementById('sign-btn');
-        btn.innerText = '✨ 已簽到（累計 ' + pts + ' 愛心）';
+        document.getElementById('sign-btn').innerText = '✨ 已簽到（' + pts + ' 愛心）';
         const box = document.getElementById('lucky-res');
         box.style.display = 'block';
-        box.innerText = '🎁 簽到成功！目前累計 ' + pts + ' 顆仙女愛心！全館結帳輸入 VIP888 享滿額驚喜禮遇！';
+        box.innerText = '🎁 簽到成功！目前累計 ' + pts + ' 顆仙女愛心！結帳輸入 FAIRY88 再享滿額禮遇！';
+      }}
+
+      function setOutfit(part, color, label) {{
+        const el = document.getElementById(part === 'top' ? 'top-swatch' : 'bot-swatch');
+        el.style.background = color;
+        el.style.color = (color === '#334155') ? '#F8FAFC' : '#1F2937';
+        el.innerText = (part === 'top' ? '👚 ' : '👖 ') + label;
+        document.getElementById('outfit-comment').innerText = '💖 絕美韓妞撞色搭配！顯白度 98%，回頭率超高！';
+      }}
+
+      function calcSize() {{
+        const h = Number(document.getElementById('h-in').value || 160);
+        const w = Number(document.getElementById('w-in').value || 52);
+        const bmi = w / ((h / 100) * (h / 100));
+        let sz = 'M 碼（標準韓系微寬鬆顯瘦版型）';
+        if (bmi < 19.5) sz = 'S 碼（修身精緻仙女版型）';
+        else if (bmi >= 22.5 && bmi < 25.5) sz = 'L 碼（舒適遮肉垂墜顯瘦版型）';
+        else if (bmi >= 25.5) sz = 'XL 碼（慵懶藏肉棉花糖女孩首選）';
+        const box = document.getElementById('size-res');
+        box.style.display = 'block';
+        box.innerText = '👗 身高 ' + h + 'cm / 體重 ' + w + 'kg 精算：推薦拿【' + sz + '】！';
+      }}
+
+      function calcFreeShip() {{
+        const cur = Number(document.getElementById('cart-in').value || 450);
+        const diff = Math.max(0, 599 - cur);
+        const box = document.getElementById('ship-res');
+        box.style.display = 'block';
+        box.innerText = diff === 0 ? '🎉 已達 $599 免運門檻！輸入 FAIRY88 再享好禮！' : '🧸 只差 $' + diff + ' 元就享免運！推薦順手帶走【小熊雲朵化妝包 $169】現省 $60 運費！';
+      }}
+
+      function pickGift(budget) {{
+        const gMap = {{
+          300: '🧸【$300 內交換禮物首選】推薦【日系毛絨小熊雲朵化妝包 $169】或【貝雷帽髮夾組 $199】！' + NL + '💌 祝福小卡：「願這份軟萌可愛的小禮物，陪你度過每個閃閃發光的日子 ✨」',
+          500: '💖【$500 內高顏值實用禮】推薦【奶油白胖胖貓爪保溫杯 $289】或【法式方領上衣 $299】！' + NL + '💌 祝福小卡：「天冷了記得多喝熱水，願你每天都被溫柔與好運包圍 💕」',
+          1000: '👑【$1000 內閨蜜奢華禮】推薦【約會必勝三件套組合包 $899】！整套搭配直接送進心坎裡！' + NL + '💌 祝福小卡：「祝最可愛的仙女天天漂亮、好運大爆發 🌸」'
+        }};
+        document.getElementById('gift-res').innerText = gMap[budget] || '';
       }}
 
       function quizResult(choice) {{
-        const resMap = {{
-          'milk': '🧋【軟萌初戀系少女 · 甜度 100%】' + NL + '你今天散發溫柔無害的治癒氣場！最適合「軟糯奶杏色針織開襟外套 ＋ 毛絨小熊化妝包」，回頭率超高！',
-          'latte': '☕【清冷千金系女神 · 質感 100%】' + NL + '你自帶高級知性濾鏡！最適合「高腰垂墜感西裝闊腿長褲 ＋ 貓爪保溫隨行杯」，俐落顯腿長又高級！',
-          'peach': '🍑【元氣甜酷系仙女 · 桃花 100%】' + NL + '你今天充滿靈動魅力！最適合「法式方領顯瘦坑條上衣 ＋ 貝雷帽珍珠髮夾組」，約會聚餐必勝！',
-          'matcha': '🍵【日系森女系文青 · 氣質 100%】' + NL + '你擁有獨特的清新文藝氣息！建議用「燕麥白上衣 ＋ 復古配飾」，簡約卻讓人一眼難忘！'
-        }};
-        document.getElementById('quiz-res').innerText = resMap[choice] || '';
+        document.getElementById('gift-res').innerText = '🧋【軟萌初戀系少女 · 甜度 100%】' + NL + '你今天散發溫柔無害的治癒氣場！最適合「軟糯奶杏色針織開襟外套 ＋ 毛絨小熊化妝包」，回頭率超高！';
       }}
 
       function filterCat(c, el) {{
@@ -265,6 +358,8 @@ def ootd_cute_boutique_app(msg: str = ""):
             <div style="font-size:18px;font-weight:900;color:#FFF1F2;margin-top:8px;">${{x.name}}</div>
             <div style="font-size:13px;color:#FECDD3;line-height:1.6;margin-top:6px;">${{x.desc}}</div>
             <div class="price-row"><span class="price-now">${{x.price}}</span><span class="price-orig">原價 ${{x.orig}}</span></div>
+            <div style="font-size:11px;color:#FDA4AF;margin-top:6px;">🔥 本週姐妹已搶購 88% · 優惠庫存倒數中</div>
+            <div style="background:rgba(255,255,255,0.05);padding:8px 10px;border-radius:10px;font-size:11px;color:#FECDD3;margin-top:6px;">💬 <b>158cm/49kg 姐妹實穿：</b>版型超級顯瘦不刺膚，已經回購第二件！</div>
             <div class="btn-row">
               <button type="button" class="btn btn-glass" onclick="saveWish('${{x.name}}','${{x.price}}',this)">💖 收藏許願</button>
               <a class="btn btn-glass" href="${{lineVoteU}}">🗳️ 閨蜜投票</a>
@@ -292,16 +387,6 @@ def ootd_cute_boutique_app(msg: str = ""):
         const box = document.getElementById('lucky-res');
         box.style.display = 'block';
         box.innerText = prizes[Math.floor(Math.random() * prizes.length)];
-      }}
-
-      function showTone(t) {{
-        const map = {{
-          'warm': '🍑【暖黃皮顯白秘訣】首選「奶杏色、燕麥白、霧霾藍、焦糖棕」，避開螢光粉與正橘色，臉部氣色立刻提亮兩階！',
-          'cool': '❄️【冷白皮仙女秘訣】大膽駕馭「蜜桃玫瑰粉、薰衣草紫、純白色」，自帶韓劇女主角高級濾鏡！',
-          'pear': '🍐【梨形身材遮胯公式】上身選「法式方領／短版針織衫」強調腰線，下身搭配「高腰垂墜西裝闊腿褲」，瞬間遮住假胯寬！',
-          'petite': '🌸【158以下小個子增高公式】把握「上短下長」黃金比例！短版開襟衫 ＋ 高腰A字短裙，視覺腿長立刻 +10cm！'
-        }};
-        document.getElementById('tone-res').innerText = map[t] || '';
       }}
 
       function switchTab(t, el) {{ document.querySelectorAll('.page').forEach(x => x.classList.remove('active')); document.querySelectorAll('.tab').forEach(x => x.classList.remove('active')); document.getElementById('page-' + t).classList.add('active'); el.classList.add('active'); }}
@@ -395,6 +480,53 @@ def on_text(event):
     txt = event.message.text.strip()
 
     try:
+        if any(k in txt for k in ["交換禮物", "送禮", "聖誕禮物", "生日禮物"]):
+            gift_msg = (
+                "🎁【女生收到會尖叫・交換禮物 ＆ 送禮排行榜】\n"
+                "1. $300 內不踩雷：日系毛絨小熊雲朵化妝包（$169）\n"
+                "2. $500 內超實用：奶油白胖胖貓爪保溫隨行杯（$289）\n"
+                "3. $1000 內閨蜜禮：溫柔約會顯瘦三件套組合包（$899）\n"
+                f"🛍️ 立即前往選品櫥窗搶購免運優惠：\n{MAIN_SHOP_URL}"
+            )
+            line_bot_api.reply_message(event.reply_token, TextSendMessage(text=gift_msg))
+            return
+
+        if any(k in txt for k in ["怎麼洗", "洗護", "縮水", "起毛球", "保養"]):
+            wash_msg = (
+                "🧺【韓系精緻女裝防縮水洗護秘訣】\n"
+                "1. 針織開襟衫：請裝入細網洗衣袋選「柔洗模式」或 30°C 以下冷水手洗，切勿烘乾，洗後平鋪晾乾就不會變形！\n"
+                "2. 雪紡／法式上衣：反面套洗衣袋機洗，陰涼處懸掛晾乾即平整。\n"
+                "3. 毛絨小熊化妝包：局部髒污用中性洗劑輕拍擦拭，自然風乾依然蓬鬆可愛！"
+            )
+            line_bot_api.reply_message(event.reply_token, TextSendMessage(text=wash_msg))
+            return
+
+        if any(k in txt for k in ["約會", "尾牙", "聚餐", "上班", "通勤", "出國", "旅遊", "遮肚子", "顯瘦"]):
+            app_uri = f"{RENDER_BASE_URL}/ootd_app?openExternalBrowser=1"
+            advice = (
+                "👗【專屬場合顯瘦穿搭顧問建議】\n"
+                "💕 約會／聚餐：法式方領鎖骨針織上衣 ＋ 高腰A字裙，溫柔純欲感拉滿！\n"
+                "💼 上班／通勤：軟糯奶杏針織開襟衫 ＋ 高腰垂墜西裝闊腿褲，俐落遮肉又顯腿長！\n"
+                "✈️ 出國／旅遊：洋蔥式層次穿搭 ＋ 復古貝雷帽（拍照超上鏡又不怕風吹亂頭髮）！\n"
+                f"🛍️ 點擊開啟選品櫥窗搶購整套優惠組：\n{app_uri}"
+            )
+            line_bot_api.reply_message(event.reply_token, TextSendMessage(text=advice))
+            return
+
+        if any(k in txt for k in ["折扣碼", "優惠碼", "免運", "折價券"]):
+            line_bot_api.reply_message(event.reply_token, TextSendMessage(text=f"🎟️【仙女 VIP 專屬隱藏優惠口令】\n專屬折扣碼：FAIRY88\n✨ 滿額現折再享超商免運優惠！\n🛍️ 立即前往官方賣場使用：\n{MAIN_SHOP_URL}"))
+            return
+
+        if txt.startswith("尺碼"):
+            nums = re.findall(r"\d+(?:\.\d+)?", txt)
+            h = float(next(iter(nums), 160.0))
+            w = float(nums[1]) if len(nums) >= 2 else 52.0
+            bmi = w / ((h / 100.0) ** 2)
+            sz = "S 碼（修身精緻版型）" if bmi < 19.5 else ("M 碼（標準韓系微寬鬆顯瘦）" if bmi < 22.5 else ("L 碼（舒適遮肉顯瘦版型）" if bmi < 25.5 else "XL 碼（慵懶藏肉版型）"))
+            app_uri = f"{RENDER_BASE_URL}/ootd_app?openExternalBrowser=1"
+            line_bot_api.reply_message(event.reply_token, TextSendMessage(text=f"📏【AI 網購尺碼精算結果】\n身高 {int(h)}cm / 體重 {int(w)}kg\n👗 推薦拿：【{sz}】\n🛍️ 立即前往選品櫥窗挑選同款：\n{app_uri}"))
+            return
+
         if txt in ["心理測驗", "測氣場", "穿搭測驗", "每日簽到", "簽到"]:
             app_uri = f"{RENDER_BASE_URL}/ootd_app?openExternalBrowser=1"
             msg = (
@@ -439,6 +571,12 @@ def on_text(event):
             pick = random.choice(prizes)
             app_uri = f"{RENDER_BASE_URL}/ootd_app?openExternalBrowser=1"
             line_bot_api.reply_message(event.reply_token, TextSendMessage(text=f"🎰 {pick}\n\n🛍️ 點擊逛逛今日幸運色同款女裝與小物：\n{app_uri}"))
+            return
+
+        matched = [x for x in CUTE_SHOP_ITEMS if isinstance(x, dict) and any(k in txt for k in ["針織", "外套", "褲", "化妝包", "杯", "帽", "三件套"])]
+        if matched and txt not in ["穿搭", "可愛小物"]:
+            it = next(iter(matched), {})
+            line_bot_api.reply_message(event.reply_token, TextSendMessage(text=f"🔍 為您找到相關爆款選品：\n\n{it.get('badge','')} {it.get('name','')}\n💰 優惠價：{it.get('price','')}（原價 {it.get('orig','')}）\n✨ {it.get('desc','')}\n\n🛍️ 立即搶購：\n{it.get('url', MAIN_SHOP_URL)}"))
             return
 
         card = make_ootd_shop_card()
