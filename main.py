@@ -18,7 +18,7 @@ GOOGLE_SHEET_API = "https://script.google.com/macros/s/AKfycbwYQCTZ_PrDnQztXoW11
 # ⚠️ 2. 請填入這個穿搭機器人的 LINE 官方帳號 ID（包含 @ 符號，例如 @123abcde）
 LINE_BOT_BASIC_ID = "@037omyph"
 # ⚠️ 3. 請填入這個穿搭機器人的 Render 公開網址（結尾不要加斜線）
-RENDER_BASE_URL = "https://onrender.com"
+RENDER_BASE_URL = "https://taiwan-ootd-cute-shop-bot.onrender.com"
 # ⚠️ 4. 請填入您的主賣場／蝦皮分潤總館／Notion 選品櫥窗網址（所有商品按鈕會自動導向您的分潤連結！）
 MAIN_SHOP_URL = "https://shopee.tw"
 
